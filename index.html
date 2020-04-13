@@ -1,0 +1,161 @@
+<!doctype html> 
+<html> 
+   <body> 
+      <div id="container"> 
+         <section> 
+            <h2>Chatroom</h2> 
+            <ul id="Messages"></ul> 
+         </section> 
+         <div id="typing_on">No one is typing </div> 
+         <footer> 
+            <h2>Input</h2> 
+            <form action=""> 
+               <input id="MessageInput" autocomplete="off" disabled="true"/><button id="MessageButton" disabled="true">Send</button> 
+            </form> 
+         </footer> 
+      </div> 
+      <aside> 
+         <h2>Users</h2> 
+         <input id="NameBox" type="text" placeholder="username" size="13"/> 
+         <button type="submit" id="NameButton" onClick="setMyName()">Submit</button> 
+         <ul id="userlist"></ul> 
+      </aside> 
+      <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script> 
+      <script src="http://code.jquery.com/jquery-1.11.1.js"></script> 
+      <script> 
+         var usersList = []; 
+         var name = ""; 
+          
+         var socket = io(); 
+          
+         socket.on("connect", function(e){ 
+           socket.emit("start"); 
+         }); 
+          
+         
+         $('form').submit(function(){ 
+           var user = [name , $("#boxMessage").val()]; 
+           socket.emit("chatting", user); 
+           $("#boxMessage").val(""); 
+           socket.emit("not typing"); 
+           return false; 
+         }); 
+          
+         socket.on('disconnect', function(msg){ 
+           $("#messages").append("<li><b>"+msg[0]+":</b> "+msg[1]); 
+         }); 
+          
+         socket.on('chat message', function(inf){ 
+           $('#messages').append('<li><i>' + inf + '</i></li>'); 
+         }); 
+          
+         socket.on('users list', function(usersList){ 
+             updateUserList(usersList); 
+         }); 
+          
+         socket.on('typing signal', function(user){ 
+           document.getElementById('typing_on').innerHTML =  user[0] + " is typing...! ";  
+          
+         }); 
+         socket.on('no typing signal', function(user){ 
+          document.getElementById('typing_on').innerHTML = "No one is typing ! ";  
+          
+         }); 
+          
+         function setMyName(){ 
+           name = document.getElementById("boxnicknamek").value; 
+           socket.emit("set name", name); 
+         } 
+          
+         function updateUserList(u){ 
+           var list = document.getElementById("userlist"); 
+           list.innerHTML = ""; 
+           for (var i = 0; i < u.length; i++ ) { 
+               var item = document.createElement("li"); 
+               item.innerHTML = u[i]; 
+               list.appendChild(item); 
+           } 
+         } 
+          
+         $('#boxMessage').on('input', function() { 
+           if ( $('#boxMessage').val().length != ""){ 
+               socket.emit("typing"); 
+           } 
+           else if ( $('#boxMessage').val() == "" ) { 
+               socket.emit("not typing"); 
+           } 
+         }); 
+          
+      </script> 
+      <style> 
+         html {  
+         height: 100%;  
+         } 
+         body {  
+         font: 13px Helvetica, Arial;  
+         margin: 0; min-height: 100%;  
+         color: #EEF2F4; 
+         background: #316E88; 
+         } 
+         form {  
+         background: #316E88;  
+         bottom: 0;  
+         width: 100%;  
+         border-radius: 2px; 
+         } 
+         form input {  
+         border: 0;  
+         padding: 10px;  
+         width: 80%; 
+         margin-right: .5%;  
+         border-radius: 2px; 
+         } 
+         form button {  
+         width: 19%;  
+         background:#0C3D4A; 
+         padding: 10px;  
+         border-radius: 2px; 
+         } 
+         section { 
+         flex: 4; 
+         background: #316E88; 
+         border: 5px solid; 
+         border-color: #0C3D4A; 
+         border-radius: 5px; 
+         } 
+         footer { 
+         flex: 1; 
+         background: #316E88; 
+         border: 5px solid; 
+         border-color: #0C3D4A; 
+         border-radius: 5px; 
+         } 
+         aside { 
+         background: #316E88; 
+         border: 5px solid; 
+         border-color: #0C3D4A; 
+         border-radius: 5px; 
+         flex: 1; 
+         } 
+         aside input { 
+         width: 100%; 
+         border: 0; 
+         padding: 10px; 
+         border-radius: 2px; 
+         } 
+         aside button { 
+         width: 100%; 
+         background: rgb(130, 224, 255); 
+         border: none; 
+         padding: 10px; 
+         border-radius: 2px; 
+         } 
+         #messages {  
+         list-style-type: none; 
+         margin: 0;  
+         padding: 0;  
+         padding: 5px 10px; 
+         } 
+      </style> 
+   </body> 
+</html> 
